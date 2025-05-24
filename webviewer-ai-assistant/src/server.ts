@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import { ChatRequest, ChatResponse } from './types';
-import { AECAssistant } from './ai-agent';
+import { AgentTeam } from './agent-team';
 
 const app = express();
 const port = process.env.PORT || 3001;
@@ -10,15 +10,20 @@ const port = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json());
 
-// Initialize AI assistant
-const assistant = new AECAssistant();
+// Initialize Agent Team (like Magentic-UI's task team)
+const agentTeam = new AgentTeam(process.env.OPENAI_API_KEY || "your-api-key");
 
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
-// Chat endpoint
+// Agent info endpoint (for debugging)
+app.get('/agents', (req, res) => {
+  res.json(agentTeam.getAgentInfo());
+});
+
+// Chat endpoint (now using agent orchestration)
 app.post('/chat', async (req, res) => {
   try {
     const { message, conversationId }: ChatRequest = req.body;
@@ -28,10 +33,10 @@ app.post('/chat', async (req, res) => {
     }
 
     // Generate conversation ID if not provided
-    const currentConversationId = conversationId || assistant.generateConversationId();
+    const currentConversationId = conversationId || agentTeam.generateConversationId();
 
-    // Process message with AI
-    const response = await assistant.processMessage(message.trim(), currentConversationId);
+    // Process message through agent team (orchestrator + specialists)
+    const response = await agentTeam.processMessage(message.trim(), currentConversationId);
 
     const chatResponse: ChatResponse = {
       message: response,
@@ -47,8 +52,9 @@ app.post('/chat', async (req, res) => {
 
 // Start server
 app.listen(port, () => {
-  console.log(`AEC AI Assistant running on port ${port}`);
+  console.log(`🚀 WebViewer AI Assistant (Agent Team) running on port ${port}`);
   console.log(`Health check: http://localhost:${port}/health`);
+  console.log(`Agent info: http://localhost:${port}/agents`);
   console.log(`Chat endpoint: POST http://localhost:${port}/chat`);
 });
 
