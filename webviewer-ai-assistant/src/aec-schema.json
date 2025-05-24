@@ -1,0 +1,77 @@
+{
+  "nodes": [
+    {
+      "id": "3d-viewer",
+      "name": "3D Viewer",
+      "type": "visualization",
+      "description": "Main 3D model viewer showing building elements",
+      "properties": ["zoom", "rotation", "selection", "visibility"]
+    },
+    {
+      "id": "gantt-chart",
+      "name": "Gantt Chart",
+      "type": "scheduling",
+      "description": "Project timeline with activities and dependencies",
+      "properties": ["timeline", "activities", "dependencies", "progress"]
+    },
+    {
+      "id": "model-tree",
+      "name": "Model Tree",
+      "type": "navigation",
+      "description": "Hierarchical view of building elements",
+      "properties": ["hierarchy", "selection", "visibility", "search"]
+    },
+    {
+      "id": "properties-panel",
+      "name": "Properties Panel",
+      "type": "data",
+      "description": "Shows properties of selected elements",
+      "properties": ["element-data", "custom-fields", "editing"]
+    },
+    {
+      "id": "layers-panel",
+      "name": "Layers Panel",
+      "type": "filtering",
+      "description": "Controls visibility of different layers",
+      "properties": ["layer-groups", "visibility-toggle", "filtering"]
+    }
+  ],
+  "relationships": [
+    {
+      "from": "model-tree",
+      "to": "3d-viewer",
+      "type": "selection-sync",
+      "description": "Selecting elements in tree highlights them in 3D"
+    },
+    {
+      "from": "3d-viewer",
+      "to": "properties-panel",
+      "type": "data-display",
+      "description": "Clicking 3D elements shows their properties"
+    },
+    {
+      "from": "gantt-chart",
+      "to": "3d-viewer",
+      "type": "progress-visualization",
+      "description": "Gantt progress affects 3D element color coding"
+    },
+    {
+      "from": "layers-panel",
+      "to": "3d-viewer",
+      "type": "visibility-control",
+      "description": "Layer toggles control 3D element visibility"
+    }
+  ],
+  "workflows": [
+    {
+      "name": "link-3d-to-gantt",
+      "description": "Link 3D building elements to Gantt chart activities",
+      "steps": ["select-3d-element", "open-gantt-panel", "create-link", "set-schedule"]
+    },
+    {
+      "name": "apply-installation-status",
+      "description": "Update installation progress for building elements",
+      "steps": ["filter-elements", "select-multiple", "set-status", "update-progress"]
+    }
+  ]
+} 
