@@ -16,27 +16,26 @@ export interface ChatResponse {
 
 export interface AECNode {
   id: string;
-  name: string;
   type: string;
-  description: string;
-  properties: string[];
+  levelOfPriority: number;
+  data: {
+    label: string;
+    description: string;
+  };
 }
 
-export interface AECRelationship {
-  from: string;
-  to: string;
-  type: string;
-  description: string;
-}
-
-export interface AECWorkflow {
-  name: string;
-  description: string;
-  steps: string[];
+export interface AECEdge {
+  id: string;
+  source: string;
+  target: string;
+  data: {
+    connection: string;
+  };
 }
 
 export interface AECSchema {
-  nodes: AECNode[];
-  relationships: AECRelationship[];
-  workflows: AECWorkflow[];
+  mainPipeline: {
+    nodes: AECNode[];
+    edges: AECEdge[];
+  };
 } 

@@ -1,77 +1,359 @@
 {
-  "nodes": [
-    {
-      "id": "3d-viewer",
-      "name": "3D Viewer",
-      "type": "visualization",
-      "description": "Main 3D model viewer showing building elements",
-      "properties": ["zoom", "rotation", "selection", "visibility"]
-    },
-    {
-      "id": "gantt-chart",
-      "name": "Gantt Chart",
-      "type": "scheduling",
-      "description": "Project timeline with activities and dependencies",
-      "properties": ["timeline", "activities", "dependencies", "progress"]
-    },
-    {
-      "id": "model-tree",
-      "name": "Model Tree",
-      "type": "navigation",
-      "description": "Hierarchical view of building elements",
-      "properties": ["hierarchy", "selection", "visibility", "search"]
-    },
-    {
-      "id": "properties-panel",
-      "name": "Properties Panel",
-      "type": "data",
-      "description": "Shows properties of selected elements",
-      "properties": ["element-data", "custom-fields", "editing"]
-    },
-    {
-      "id": "layers-panel",
-      "name": "Layers Panel",
-      "type": "filtering",
-      "description": "Controls visibility of different layers",
-      "properties": ["layer-groups", "visibility-toggle", "filtering"]
-    }
-  ],
-  "relationships": [
-    {
-      "from": "model-tree",
-      "to": "3d-viewer",
-      "type": "selection-sync",
-      "description": "Selecting elements in tree highlights them in 3D"
-    },
-    {
-      "from": "3d-viewer",
-      "to": "properties-panel",
-      "type": "data-display",
-      "description": "Clicking 3D elements shows their properties"
-    },
-    {
-      "from": "gantt-chart",
-      "to": "3d-viewer",
-      "type": "progress-visualization",
-      "description": "Gantt progress affects 3D element color coding"
-    },
-    {
-      "from": "layers-panel",
-      "to": "3d-viewer",
-      "type": "visibility-control",
-      "description": "Layer toggles control 3D element visibility"
-    }
-  ],
-  "workflows": [
-    {
-      "name": "link-3d-to-gantt",
-      "description": "Link 3D building elements to Gantt chart activities",
-      "steps": ["select-3d-element", "open-gantt-panel", "create-link", "set-schedule"]
-    },
-    {
-      "name": "apply-installation-status",
-      "description": "Update installation progress for building elements",
-      "steps": ["filter-elements", "select-multiple", "set-status", "update-progress"]
-    }
-  ]
+  "mainPipeline": {
+    "nodes": [
+      {
+        "id": "1",
+        "type": "default",
+        "levelOfPriority": 0,
+        "data": {
+          "label": "WebViewer app",
+          "description": "Page of the webviewer app itself. It includes main entities: 3D viewer taking 60% of window space to display construction site model fragments, Gantt chart showing schedule activities in remaining space. Various tools are positioned around these core components."
+        }
+      },
+      {
+        "id": "2",
+        "type": "default",
+        "levelOfPriority": 2,
+        "data": {
+          "label": "Top bar",
+          "description": "Top bar of the webviewer app. It includes:\n• Logo (opens app menu)\n• Tools (Model Layers, Issues, Section Box/Planes)\n• Search bar for model elements and schedule activities\n• Filter panel\n• Last data fetch status\n• User avatar (opens profile actions)"
+        }
+      },
+      {
+        "id": "3",
+        "type": "default",
+        "levelOfPriority": 1,
+        "data": {
+          "label": "3D viewer",
+          "description": "3D viewer taking 60% of window space to display construction site model fragments."
+        }
+      },
+      {
+        "id": "4",
+        "type": "default",
+        "levelOfPriority": 2,
+        "data": {
+          "label": "Model layers",
+          "description": "Model layers are a set of layers that can be used to display different parts of the model. They are used to display the model in a more detailed way."
+        }
+      },
+      {
+        "id": "5",
+        "type": "default",
+        "levelOfPriority": 1,
+        "data": {
+          "label": "Gantt chart",
+          "description": "Gantt chart showing schedule activities in remaining space. The structure comprises of WBS items as parents and schedule activities as children. \nThe chart is used to track the progress of the schedule activities. \nIt's divided into 2 parts: \n1) Left side shows tree structure of items\n2) Right side shows schedule activities as bars. \n Each activity has columns like 'Discipline', 'Package', 'Phase', 'Start date', 'End date', 'Elements' (number of elements from 3D viewer linked to the activity)"
+        }
+      },
+      {
+        "id": "6",
+        "type": "default",
+        "levelOfPriority": 3,
+        "data": {
+          "label": "Data mapping",
+          "description": "Data mapping is additional panel appearing above the gantt. It allows to fill out values for activities columns like 'Discipline', 'Package', 'Phase'"
+        }
+      },
+      {
+        "id": "7",
+        "type": "default",
+        "levelOfPriority": 2,
+        "data": {
+          "label": "Properties panel",
+          "description": "Properties panel is additional panel on right hand side of the 3D viewer. When nothing is selected it shows overview of the project. When element is selected it shows properties of the selected element. If schedule activity is selected it shows properties of the selected activity."
+        }
+      },
+      {
+        "id": "8",
+        "type": "default",
+        "levelOfPriority": 3,
+        "data": {
+          "label": "Search bar",
+          "description": "Search bar allows to filter elements and schedule activities by name. It's located in the top bar of the webviewer app. While typing it shows suggestions of unique names. We can select one of them or continue typing to see more suggestions."
+        }
+      },
+      {
+        "id": "9",
+        "type": "default",
+        "levelOfPriority": 3,
+        "data": {
+          "label": "Context menu within 3D viewer",
+          "description": "When some elements are selected in 3D viewer it comprises: \n 1. Select all \n 2. Select same type \n 3. Isolate selected \n 4. Hide selected \n 5. Show all objects \n 6. Focus on selected \n 7. Section box selected \n 8. Set status (sublevel includes 'set installed', 'clear status' ) \n 9. Link (sublevel includes 'Link selected activity', 'Search for activity', 'Un-link selected activity')"
+        }
+      },
+      {
+        "id": "10",
+        "type": "default",
+        "levelOfPriority": 3,
+        "data": {
+          "label": "Context menu within gantt chart",
+          "description": "When some activity is selected in gantt chart it comprises: \n 1. Un-link selected elements \n 2. Link selected elements \n 3. Select linked elements \n 4. Isolate linked elements \n 5. Collapse selected \n 6. Expand all \n 7. Collapse all \n 8. Show / hide Schedule \n 9. Open Mapping table \n 10. Deselect activity"
+        }
+      },
+      {
+        "id": "11",
+        "type": "default",
+        "levelOfPriority": 3,
+        "data": {
+          "label": "Context menu within model layers",
+          "description": "When some model layer is selected in model layers panel it comprises: \n 1. Show / hide \n 2. Select \n 3. Create folder for selected \n 4. Link selected activity "
+        }
+      },
+      {
+        "id": "12",
+        "type": "default",
+        "levelOfPriority": 2,
+        "data": {
+          "label": "Filter panel",
+          "description": "As same as the Search bar it allows to filter viewer's elements and schedule activities. It includes 3 tabs: Model / Schedule / Both. \n Model tab comprises the following sections: Active Filters, Discipline, Package, Floor, Room, Progress, Status. \n Schedule tab comprises the following sections: Active Filters, Discipline, Package, Floor, Room. \n Both tab comprises the following sections: Active Filters, Discipline, Package, Floor, Room, Progress, Status."
+        }
+      },
+      {
+        "id": "13",
+        "type": "default",
+        "levelOfPriority": 3,
+        "data": {
+          "label": "App menu",
+          "description": "The list pops up when logo in the top bar is clicked. It includes the following sections: \n 1. Edit (undo / redo) \n 2. View (show cooordinates) \n 3. Camera (Orbit mode / Walk mode / Fit to view / Reset camera) \n 4. Preferences (Low performance mode)"
+        }
+      },
+      {
+        "id": "14",
+        "type": "default",
+        "levelOfPriority": 0,
+        "data": {
+          "label": "Linking process across 3D viewer and gantt chart",
+          "description": "We can link schedule activities to elements in 3D viewer and vice versa. We need it in order to align schedule activities with real elements on the construction site."
+        }
+      },
+      {
+        "id": "15",
+        "type": "default",
+        "levelOfPriority": 0,
+        "data": {
+          "label": "Applying installation status to elements",
+          "description": "We can apply installation status to elements in 3D viewer. We need it in order to track the progress of the installation."
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "webviewer-to-top-bar",
+        "source": "1",
+        "target": "2",
+        "data": {
+          "connection": "WebViewer has top bar on the top as the main navigation element"
+        }
+      },
+      {
+        "id": "webviewer-to-model-layers",
+        "source": "1",
+        "target": "4",
+        "data": {
+          "connection": "WebViewer has model layers on the left as the main navigation element for 3D viewer"
+        }
+      },
+      {
+        "id": "model-layers-to-3d-viewer",
+        "source": "4",
+        "target": "3",
+        "data": {
+          "connection": "Model layers is the outliner for 3D viewer. It displays the whole list of models and every models includes tree structure of elements. We can load/unload models by clicking on checkbox in the left part of the model layer item. By clicking on item's name we select either group of elements or single element in 3D viewer"
+        }
+      },
+      {
+        "id": "top-bar-to-model-layers",
+        "source": "2",
+        "target": "4",
+        "data": {
+          "connection": "Top bar has model layers button to open model layers panel. The icon looks like 2 square surfaces above each other"
+        }
+      },
+      {
+        "id": "webviewer-to-gantt-chart",
+        "source": "1",
+        "target": "5",
+        "data": {
+          "connection": "WebViewer has gantt chart bottom part of the screen. It takes 40% of the screen height and 100% of the screen width. The ratio between 3D viewer and gantt can be changed by dragging the separator line between them."
+        }
+      },
+      {
+        "id": "gantt-chart-to-data-mapping",
+        "source": "5",
+        "target": "6",
+        "data": {
+          "connection": "Initially Data mapping panel is hidden. If some activities has empty values in columns like 'Discipline', 'Package', 'Phase' we can open data mapping panel by calling via context menu. Also if some activities has empty values, we see alert notification in the top bar with button to open data mapping panel."
+        }
+      },
+      {
+        "id": "3d-viewer-to-properties-panel",
+        "source": "3",
+        "target": "7",
+        "data": {
+          "connection": "3D viewer has properties panel on the right side of the screen. It shows properties of the selected element. If there is link between selected elements and some schedule activity, we can list all activities linked to the selected elements."
+        }
+      },
+      {
+        "id": "gantt-chart-to-properties-panel",
+        "source": "5",
+        "target": "7",
+        "data": {
+          "connection": "Gantt chart has properties panel on the right side of the screen. It shows properties of the selected activity. If there is link between selected activity and some elements, we can list all elements linked to the selected activity."
+        }
+      },
+      {
+        "id": "search-bar-to-3d-viewer",
+        "source": "8",
+        "target": "3",
+        "data": {
+          "connection": "Search bar allows to filter viewer's elements. While typing it shows suggestions of unique names. We can select one of them or continue typing to see more suggestions."
+        }
+      },
+      {
+        "id": "search-bar-to-gantt-chart",
+        "source": "8",
+        "target": "5",
+        "data": {
+          "connection": "Search bar allows to filter gantt chart's activities. While typing it shows suggestions of unique names. We can select one of them or continue typing to see more suggestions."
+        }
+      },
+      {
+        "id": "search-bar-to-model-layers",
+        "source": "8",
+        "target": "4",
+        "data": {
+          "connection": "Search bar allows to filter model layers' elements. While typing it shows suggestions of unique names. We can select one of them or continue typing to see more suggestions."
+        }
+      },
+      {
+        "id": "search-bar-to-top-bar",
+        "source": "8",
+        "target": "2",
+        "data": {
+          "connection": "Search bar is located in the top bar, right in the center of the screen."
+        }
+      },
+      {
+        "id": "3d-viewer-to-context-menu",
+        "source": "3",
+        "target": "9",
+        "data": {
+          "connection": "3D viewer has context menu when some elements are selected."
+        }
+      },
+      {
+        "id": "gantt-chart-to-context-menu",
+        "source": "5",
+        "target": "10",
+        "data": {
+          "connection": "Gantt chart has context menu when some activity is selected."
+        }
+      },
+      {
+        "id": "context-menu-to-data-mapping",
+        "source": "10",
+        "target": "6",
+        "data": {
+          "connection": "Context menu includes action to open Data mapping panel"
+        }
+      },
+      {
+        "id": "model-layers-to-context-menu",
+        "source": "4",
+        "target": "11",
+        "data": {
+          "connection": "Model layers has context menu when some model layer is selected."
+        }
+      },
+      {
+        "id": "filter-panel-to-3d-viewer",
+        "source": "12",
+        "target": "4",
+        "data": {
+          "connection": "Filter panel is located in the top bar, right in the center of the screen."
+        }
+      },
+      {
+        "id": "filter-panel-to-gantt-chart",
+        "source": "12",
+        "target": "5",
+        "data": {
+          "connection": "Filter panel is located in the top bar, right in the center of the screen."
+        }
+      },
+      {
+        "id": "filter-panel-to-top-bar",
+        "source": "12",
+        "target": "2",
+        "data": {
+          "connection": "Filter panel is located in the top bar, right in the center of the screen."
+        }
+      },
+      {
+        "id": "app-menu-to-top-bar",
+        "source": "13",
+        "target": "2",
+        "data": {
+          "connection": "App menu appears when logo in the top bar is clicked"
+        }
+      },
+      {
+        "id": "3d-viewer-to-linking-process",
+        "source": "3",
+        "target": "14",
+        "data": {
+          "connection": "3D viewer has linking process across 3D viewer and gantt chart"
+        }
+      },
+      {
+        "id": "gantt-chart-to-linking-process",
+        "source": "5",
+        "target": "14",
+        "data": {
+          "connection": "Gantt chart has linking process across 3D viewer and gantt chart"
+        }
+      },
+      {
+        "id": "viewer-context-menu-to-linking-process",
+        "source": "9",
+        "target": "14",
+        "data": {
+          "connection": "Context menu has linking process across 3D viewer and gantt chart"
+        }
+      },
+      {
+        "id": "gantt-chart-context-menu-to-linking-process",
+        "source": "10",
+        "target": "14",
+        "data": {
+          "connection": "Gantt chart context menu has linking process across 3D viewer and gantt chart"
+        }
+      },
+      {
+        "id": "model-layers-context-menu-to-linking-process",
+        "source": "11",
+        "target": "14",
+        "data": {
+          "connection": "Model layers context menu has linking process across 3D viewer and gantt chart"
+        }
+      },
+      {
+        "id": "3d-viewer-to-applying-installation-status",
+        "source": "3",
+        "target": "15",
+        "data": {
+          "connection": "3D viewer has applying installation status across 3D viewer and gantt chart"
+        }
+      },
+      {
+        "id": "viewer-context-menu-to-applying-installation-status",
+        "source": "9",
+        "target": "15",
+        "data": {
+          "connection": "Viewer context menu has applying installation status across 3D viewer and gantt chart"
+        }
+      }
+    ]
+  }
 } 

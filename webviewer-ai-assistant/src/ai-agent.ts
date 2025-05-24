@@ -3,7 +3,7 @@ import { AECSchema, ChatMessage } from './types';
 import aecSchema from './aec-schema.json';
 
 const openai = new OpenAI({
-  apiKey: 'your-api-key-here' // Replace with actual key
+  apiKey: process.env.OPENAI_API_KEY
 });
 
 export class AECAssistant {
@@ -23,26 +23,28 @@ export class AECAssistant {
     const schemaContext = this.buildSchemaContext();
     
     // Create system prompt
-    const systemPrompt = `You are an AI assistant specialized in AEC (Architecture, Engineering, Construction) applications.
-You help users understand and work with a construction management web application.
+    const systemPrompt = `You are an AI assistant specialized in construction management applications.
+You help users understand and work with a WebViewer application for construction projects.
 
-Application Structure:
+The WebViewer Application Structure:
 ${schemaContext}
 
 Your role:
 - Help users understand how different parts of the application work together
-- Explain workflows and relationships between components
-- Provide guidance on using specific features
-- Answer questions about construction management processes
-- Be concise and practical in your responses
+- Explain workflows and relationships between components (3D viewer, Gantt chart, model layers, etc.)
+- Provide step-by-step guidance for common tasks like linking 3D elements to activities
+- Answer questions about installation status tracking and progress visualization
+- Help troubleshoot when features aren't working as expected
+- Be practical and concise in your responses
 
-User's message context: The user is working with a construction management application and may ask about:
-- How to use specific features (3D viewer, Gantt charts, etc.)
-- Understanding relationships between elements
-- Workflow guidance
-- Troubleshooting unexpected behavior
+Common user needs:
+- Linking 3D building elements to Gantt chart activities
+- Applying installation status to track construction progress
+- Understanding how selection in one component affects others
+- Using context menus and navigation features
+- Filtering and searching for specific elements or activities
 
-Respond conversationally and helpfully.`;
+Respond conversationally and provide actionable guidance.`;
 
     try {
       const completion = await openai.chat.completions.create({
@@ -69,26 +71,53 @@ Respond conversationally and helpfully.`;
   }
 
   private buildSchemaContext(): string {
-    const nodesList = this.schema.nodes.map(node => 
-      `- ${node.name}: ${node.description}`
-    ).join('\n');
+    const nodes = this.schema.mainPipeline.nodes;
+    const edges = this.schema.mainPipeline.edges;
 
-    const relationshipsList = this.schema.relationships.map(rel => 
-      `- ${rel.description}`
-    ).join('\n');
+    // Group nodes by priority level for better organization
+    const coreComponents = nodes.filter(n => n.levelOfPriority === 0);
+    const primaryComponents = nodes.filter(n => n.levelOfPriority === 1);
+    const secondaryComponents = nodes.filter(n => n.levelOfPriority === 2);
+    const detailComponents = nodes.filter(n => n.levelOfPriority === 3);
 
-    const workflowsList = this.schema.workflows.map(workflow => 
-      `- ${workflow.name}: ${workflow.description}`
-    ).join('\n');
+    // Build organized component list
+    let context = '';
+    
+    if (coreComponents.length > 0) {
+      context += 'CORE WORKFLOWS:\n';
+      coreComponents.forEach(node => {
+        context += `• ${node.data.label}: ${node.data.description}\n`;
+      });
+      context += '\n';
+    }
 
-    return `Components:
-${nodesList}
+    if (primaryComponents.length > 0) {
+      context += 'PRIMARY COMPONENTS:\n';
+      primaryComponents.forEach(node => {
+        context += `• ${node.data.label}: ${node.data.description}\n`;
+      });
+      context += '\n';
+    }
 
-Key Relationships:
-${relationshipsList}
+    if (secondaryComponents.length > 0) {
+      context += 'SECONDARY COMPONENTS:\n';
+      secondaryComponents.forEach(node => {
+        context += `• ${node.data.label}: ${node.data.description}\n`;
+      });
+      context += '\n';
+    }
 
-Common Workflows:
-${workflowsList}`;
+    // Add key relationships
+    context += 'KEY RELATIONSHIPS:\n';
+    edges.slice(0, 8).forEach(edge => { // Show most important relationships
+      const sourceNode = nodes.find(n => n.id === edge.source);
+      const targetNode = nodes.find(n => n.id === edge.target);
+      if (sourceNode && targetNode) {
+        context += `• ${sourceNode.data.label} → ${targetNode.data.label}: ${edge.data.connection}\n`;
+      }
+    });
+
+    return context;
   }
 
   private updateConversationMemory(conversationId: string, userMessage: string, assistantMessage: string): void {
