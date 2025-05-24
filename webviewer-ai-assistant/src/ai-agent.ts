@@ -3,8 +3,7 @@ import { AECSchema, ChatMessage } from "./types";
 import aecSchema from "./aec-schema.json";
 
 const openai = new OpenAI({
-  apiKey:
-    "", // Replace with actual key
+  apiKey: process.env.OPENAI_API_KEY,
 });
 
 export class AECAssistant {
@@ -27,43 +26,46 @@ export class AECAssistant {
     const schemaContext = this.buildSchemaContext();
 
     // Create system prompt
-    const systemPrompt = `You are the official AI assistant for XYZ Reality's WebViewer application.
-You are an EXPERT who knows this construction management application inside and out.
+    const systemPrompt = `🚨 CRITICAL: You are ONLY allowed to use information from the schema below. DO NOT add, assume, or invent anything.
 
-CRITICAL RULES:
-- ONLY use information from the schema below - NEVER add anything not explicitly mentioned
-- If something is not in the schema, say "I don't have that information in my knowledge base"
-- Be CONCISE and DIRECT - users are busy and need quick, clear answers
-- Respond like an expert who has used this app for years
+WHO YOU ARE:
+You are the official AI assistant for XYZ Reality's WebViewer application. You are an expert who has mastered this construction management software completely.
 
-The WebViewer Application (XYZ Reality):
+WHAT YOU'RE ACCOUNTABLE FOR:
+- Providing accurate guidance to users working with the WebViewer application
+- Helping users understand how to use specific features and workflows
+- Explaining relationships between different components (3D viewer, Gantt chart, etc.)
+- Guiding users through linking processes and status tracking
+- Troubleshooting when users can't find or use features
+- Being the reliable expert that users can depend on for WebViewer questions
+
+STRICT RULES (VIOLATION = FAILURE):
+1. If information is NOT in the schema → say "I don't have that information in my knowledge base"
+2. NEVER mention features, buttons, or workflows not explicitly listed in the schema
+3. Use EXACT terminology from the schema - don't paraphrase
+4. Before responding, mentally check: "Is this information explicitly in my schema?"
+
+AVAILABLE INFORMATION (SCHEMA):
 ${schemaContext}
 
-Your expertise covers:
-- Exact button locations and menu options as defined in the schema
-- Precise workflows for linking elements to activities
-- Specific context menu options (right-click menus)
-- Installation status workflows
-- Component relationships and how they sync
+RESPONSE FORMAT:
+- Direct answer first
+- Only use information above
+- Be expert-level concise
+- If unsure → "I don't have that information in my knowledge base"
 
-RESPONSE STYLE:
-- Short, expert answers
-- Start with the direct answer, then brief explanation if needed
-- Use exact terminology from the schema
-- Be confident - you know this application completely
-
-Users expect you to know EVERYTHING about this WebViewer application.`;
+You are THE expert for XYZ Reality's WebViewer. Users rely on you to know this application perfectly.`;
 
     try {
       const completion = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
+        model: "gpt-4o",
         messages: [
           { role: "system", content: systemPrompt },
           ...history.map((msg) => ({ role: msg.role, content: msg.content })),
           { role: "user", content: message },
         ],
-        max_tokens: 500,
-        temperature: 0.7,
+        max_tokens: 300,
+        temperature: 0.1,
       });
 
       const response =
@@ -84,55 +86,21 @@ Users expect you to know EVERYTHING about this WebViewer application.`;
     const nodes = this.schema.mainPipeline.nodes;
     const edges = this.schema.mainPipeline.edges;
 
-    // Group nodes by priority level for better organization
-    const coreComponents = nodes.filter((n) => n.levelOfPriority === 0);
-    const primaryComponents = nodes.filter((n) => n.levelOfPriority === 1);
-    const secondaryComponents = nodes.filter((n) => n.levelOfPriority === 2);
-    const detailComponents = nodes.filter((n) => n.levelOfPriority === 3);
-
-    // Build organized component list
-    let context = "";
-
-    if (coreComponents.length > 0) {
-      context += "CORE WORKFLOWS:\n";
-      coreComponents.forEach((node) => {
-        context += `• ${node.data.label}: ${node.data.description}\n`;
-      });
-      context += "\n";
-    }
-
-    if (primaryComponents.length > 0) {
-      context += "PRIMARY COMPONENTS:\n";
-      primaryComponents.forEach((node) => {
-        context += `• ${node.data.label}: ${node.data.description}\n`;
-      });
-      context += "\n";
-    }
-
-    if (secondaryComponents.length > 0) {
-      context += "SECONDARY COMPONENTS:\n";
-      secondaryComponents.forEach((node) => {
-        context += `• ${node.data.label}: ${node.data.description}\n`;
-      });
-      context += "\n";
-    }
-
-    if (detailComponents.length > 0) {
-      context += "DETAILED FEATURES:\n";
-      detailComponents.forEach((node) => {
-        context += `• ${node.data.label}: ${node.data.description}\n`;
-      });
-      context += "\n";
-    }
-
-    // Add key relationships
-    context += "KEY RELATIONSHIPS:\n";
-    edges.slice(0, 8).forEach((edge) => {
-      // Show most important relationships
+    let context = "COMPONENTS:\n";
+    
+    // List ALL components with their exact descriptions
+    nodes.forEach((node) => {
+      context += `${node.data.label}: ${node.data.description}\n`;
+    });
+    
+    context += "\nCONNECTIONS:\n";
+    
+    // List key relationships 
+    edges.forEach((edge) => {
       const sourceNode = nodes.find((n) => n.id === edge.source);
       const targetNode = nodes.find((n) => n.id === edge.target);
       if (sourceNode && targetNode) {
-        context += `• ${sourceNode.data.label} → ${targetNode.data.label}: ${edge.data.connection}\n`;
+        context += `${sourceNode.data.label} → ${targetNode.data.label}: ${edge.data.connection}\n`;
       }
     });
 
