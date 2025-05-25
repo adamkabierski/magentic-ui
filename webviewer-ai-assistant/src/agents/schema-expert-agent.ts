@@ -10,7 +10,7 @@ export class SchemaExpertAgent extends BaseAgent {
   constructor(apiKey: string) {
     super(
       "schema_expert",
-      "Expert agent for XYZ Reality's WebViewer application. Knows all components, workflows, and relationships from the official schema."
+      "Expert agent for XYZ Reality's WebViewer application. Provides expert answers using pre-analyzed relevant schema information."
     );
     
     this.schema = aecSchema as AECSchema;
@@ -19,9 +19,15 @@ export class SchemaExpertAgent extends BaseAgent {
 
   async processMessage(
     message: string,
-    conversationHistory: AgentMessage[]
+    conversationHistory: AgentMessage[],
+    relevantSchemaInfo?: string
   ): Promise<AgentResponse> {
-    const schemaContext = this.buildSchemaContext();
+    
+    console.log(`🎯 SchemaExpertAgent processing: "${message}"`);
+    console.log(`📋 Received schema info: ${relevantSchemaInfo ? relevantSchemaInfo.substring(0, 200) + '...' : 'None - using full schema'}`);
+    
+    // Use relevant schema info if provided by SchemaAnalystAgent, otherwise fall back to full schema
+    const schemaContext = relevantSchemaInfo || this.buildFullSchemaContext();
     
     const systemPrompt = `🚨 CRITICAL: You are the SchemaExpertAgent for XYZ Reality's WebViewer application.
 
@@ -33,12 +39,13 @@ STRICT RULES (VIOLATION = FAILURE):
 2. If NOT in schema → "I don't have that information in my knowledge base"
 3. Use EXACT terminology from schema
 4. Be concise and expert-level
+5. The schema information below has been pre-analyzed for relevance to this specific query
 
-SCHEMA KNOWLEDGE:
+RELEVANT SCHEMA INFORMATION:
 ${schemaContext}
 
 Your expertise: WebViewer components, linking workflows, context menus, installation status tracking.
-Respond as the definitive expert.`;
+Respond as the definitive expert with the most relevant information.`;
 
     try {
       const completion = await this.openai.chat.completions.create({
@@ -51,11 +58,13 @@ Respond as the definitive expert.`;
           { role: "user", content: message },
         ],
         max_tokens: 300,
-        temperature: 0.1,
+        temperature: 0.0,
       });
 
       const response = completion.choices[0]?.message?.content || 
         "I apologize, but I encountered an error processing your request.";
+
+      console.log(`💬 SchemaExpertAgent response: ${response}`);
 
       // Schema expert is terminal - doesn't delegate to other agents
       return this.createResponse(response, false);
@@ -69,7 +78,7 @@ Respond as the definitive expert.`;
     }
   }
 
-  private buildSchemaContext(): string {
+  private buildFullSchemaContext(): string {
     const nodes = this.schema.mainPipeline.nodes;
     const edges = this.schema.mainPipeline.edges;
 

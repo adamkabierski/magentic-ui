@@ -1,20 +1,22 @@
 import OpenAI from "openai";
 import { BaseAgent, AgentMessage, AgentResponse } from "./base-agent";
+import { SchemaExpertAgent } from "./schema-expert-agent";
+import { SchemaAnalystAgent } from "./schema-analyst-agent";
 
 export class OrchestratorAgent extends BaseAgent {
   private openai: OpenAI;
-  private availableAgents: Map<string, string>;
+  private schemaAnalyst: SchemaAnalystAgent;
+  private schemaExpert: SchemaExpertAgent;
 
   constructor(apiKey: string) {
     super(
       "orchestrator",
-      "Main orchestrator agent that routes user queries to appropriate specialized agents based on intent analysis."
+      "Main orchestrator that coordinates between schema analysis and expert response generation using AI-driven routing."
     );
     
     this.openai = new OpenAI({ apiKey });
-    this.availableAgents = new Map([
-      ["schema_expert", "Expert on XYZ Reality's WebViewer application components, workflows, and relationships. Handles questions about features, navigation, linking, status tracking."]
-    ]);
+    this.schemaAnalyst = new SchemaAnalystAgent(apiKey);
+    this.schemaExpert = new SchemaExpertAgent(apiKey);
   }
 
   async processMessage(
@@ -22,56 +24,24 @@ export class OrchestratorAgent extends BaseAgent {
     conversationHistory: AgentMessage[]
   ): Promise<AgentResponse> {
     
-    const agentList = Array.from(this.availableAgents.entries())
-      .map(([name, desc]) => `${name}: ${desc}`)
-      .join('\n');
-
-    const systemPrompt = `You are the OrchestratorAgent for XYZ Reality's WebViewer application.
-
-ROLE: Analyze user queries and route them to the most appropriate agent.
-
-AVAILABLE AGENTS:
-${agentList}
-
-USER QUERY ANALYSIS:
-- If user asks about WebViewer features, components, workflows, linking, context menus, or any application functionality → route to "schema_expert"
-- The schema_expert handles ALL WebViewer application questions
-
-RESPONSE FORMAT:
-Respond with ONLY the agent name that should handle this query: "schema_expert"
-
-Do not provide explanations, just the agent name.`;
-
     try {
-      const completion = await this.openai.chat.completions.create({
-        model: "gpt-4o",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: `Route this query: "${message}"` },
-        ],
-        max_tokens: 50,
-        temperature: 0.1,
-      });
-
-      const selectedAgent = completion.choices[0]?.message?.content?.trim() || "schema_expert";
+      // Step 1: Let SchemaAnalystAgent find relevant schema information using AI
+      const analysisResponse = await this.schemaAnalyst.processMessage(message, conversationHistory);
       
-      // For now, always route to schema_expert since it's our main agent
-      const targetAgent = this.availableAgents.has(selectedAgent) ? selectedAgent : "schema_expert";
-
-      return this.createResponse(
-        `Routing to ${targetAgent}`,
-        true,
-        targetAgent
+      // Step 2: Use SchemaExpertAgent with the pre-analyzed relevant schema info
+      const expertResponse = await this.schemaExpert.processMessage(
+        message, 
+        conversationHistory,
+        analysisResponse.content
       );
+      
+      return expertResponse;
       
     } catch (error) {
       console.error("OrchestratorAgent error:", error);
-      // Default to schema expert on error
-      return this.createResponse(
-        "Routing to schema_expert",
-        true,
-        "schema_expert"
-      );
+      
+      // Fallback: Use SchemaExpertAgent directly if analysis fails
+      return await this.schemaExpert.processMessage(message, conversationHistory);
     }
   }
 } 
